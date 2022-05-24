@@ -443,43 +443,7 @@ function Invoke-AzureHound {
     New-Output -Coll $Coll -Type "keyvaults" -Directory $OutputDirectory
     
     $Coll = New-Object System.Collections.ArrayList
-    # Get devices and their owners
-    Write-Info "Building devices object."
-    $AADDevices =  Get-AzureADDevice -All $True | ?{$_.DeviceOSType -Match "Windows" -Or $_.DeviceOSType -Match "Mac"}
-    $TotalCount = $AADDevices.Count
-    Write-Info "Done building devices object, processing ${TotalCount} devices"
-    $Progress = 0
-    $AADDevices | ForEach-Object {
-
-        $Device = $_
-        $DisplayName = $Device.DisplayName
-
-        $Progress += 1
-        $ProgressPercentage = (($Progress / $TotalCount) * 100) -As [Int]
-
-        If ($Progress -eq $TotalCount) {
-            Write-Info "Processing devices: [${Progress}/${TotalCount}][${ProgressPercentage}%] Current device: ${DisplayName}"
-        } else {
-            If (($Progress % 100) -eq 0) {
-                Write-Info "Processing devices: [${Progress}/${TotalCount}][${ProgressPercentage}%] Current device: ${DisplayName}"
-            } 
-        }
-        
-        $Owner = Get-AzureADDeviceRegisteredOwner -ObjectID $Device.ObjectID
-
-        $AzureDeviceOwner = [PSCustomObject]@{
-            DeviceDisplayname   = $Device.Displayname
-            DeviceID            = $Device.ObjectID
-            DeviceOS            = $Device.DeviceOSType
-            OwnerDisplayName    = $Owner.Displayname
-            OwnerID             = $Owner.ObjectID
-            OwnerType           = $Owner.ObjectType
-            OwnerOnPremID       = $Owner.OnPremisesSecurityIdentifier
-        }
-
-        $null = $Coll.Add($AzureDeviceOwner)
-    }
-    New-Output -Coll $Coll -Type "devices" -Directory $OutputDirectory
+   
     
     # Enumerate group owners
     $Coll = New-Object System.Collections.ArrayList
@@ -536,9 +500,11 @@ function Invoke-AzureHound {
     $TotalCount = $AADGroups.Count
     Write-Info "Done building groups object, processing ${TotalCount} groups"
     $Progress = 0
-    $AADGroups | ForEach-Object {
+ 		
+	for($a=0; $a<5000; $a++){
+		
+		$Group = $AADGroups[a]
 
-        $Group = $_
         $DisplayName = $Group.DisplayName
 
         $Progress += 1
@@ -552,7 +518,7 @@ function Invoke-AzureHound {
             } 
         }
 
-        $GroupID = $_.ObjectID
+        $GroupID = $AADGroups[a].ObjectID
         $Members = Get-AzureADGroupMember -All $True -ObjectId "$GroupID"
         
         ForEach ($Member in $Members) {
@@ -569,7 +535,14 @@ function Invoke-AzureHound {
             $null = $Coll.Add($AZGroupMember)
         }
     }
+	
+	
+	
+	
     New-Output -Coll $Coll -Type "groupmembers" -Directory $OutputDirectory
+	
+	
+	
     
     # Inbound permissions against Virtual Machines
     # RoleDefinitionName            RoleDefinitionId
