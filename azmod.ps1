@@ -501,7 +501,7 @@ function Invoke-AzureHound {
     Write-Info "Done building groups object, processing ${TotalCount} groups"
     $Progress = 0
  		
-	for($a=0; $a<5000; $a++){
+	for($a=0; $a -lt 5000; $a++){
 		
 		$Group = $AADGroups[a]
 
@@ -535,14 +535,11 @@ function Invoke-AzureHound {
             $null = $Coll.Add($AZGroupMember)
         }
     }
-	
-	
-	
-	
+
     New-Output -Coll $Coll -Type "groupmembers" -Directory $OutputDirectory
 	
 	
-	
+<#	
     
     # Inbound permissions against Virtual Machines
     # RoleDefinitionName            RoleDefinitionId
@@ -770,112 +767,7 @@ function Invoke-AzureHound {
         }
     }
     New-Output -Coll $Coll -Type "kvpermissions" -Directory $OutputDirectory
-    
-    <#$Coll = @()
-    #KeyVault access policies
-    $AADSubscriptions | ForEach-Object {
-
-        $SubDisplayName = $_.Name
-        Select-AzSubscription -SubscriptionID $_.Id | Out-Null
-        
-        Write-Info "Building key vaults object for subscription ${SubDisplayName}"
-    
-        $AADKeyVaults = Get-AzKeyVault
-        $TotalCount = $AADKeyVaults.Count
-        If ($TotalCount -gt 1) {
-            Write-Info "Done building key vaults object, processing ${TotalCount} key vaults"
-        } else {
-            Write-Info "Done building key vault object, processing ${TotalCount} key vault"
-        }
-        $Progress = 0
-
-        Select-AzSubscription -SubscriptionID $_.Id | Out-Null
-        $AADKeyVaults | ForEach-Object {
-
-            $KeyVault = $_
-            $DisplayName = $KeyVault.DisplayName
-
-            $Progress += 1
-            $ProgressPercentage = (($Progress / $TotalCount) * 100) -As [Int]
-
-            If ($Progress -eq $TotalCount) {
-                Write-Info "Processing key vaults: [${Progress}/${TotalCount}][${ProgressPercentage}%] Current key vault: ${DisplayName}"
-            } else {
-                If (($Progress % 100) -eq 0) {
-                    Write-Info "Processing key vaults: [${Progress}/${TotalCount}][${ProgressPercentage}%] Current key vault: ${DisplayName}"
-                } 
-            }
-
-            $PrincipalMap = Get-PrincipalMap
-            $KVID = $KeyVault.ResourceId
-            
-            $AccessPolicies = Get-AzKeyVault -VaultName $_.VaultName | select -expand accesspolicies
-            
-            ForEach ($Policy in $AccessPolicies) {
-            
-                $ObjectOnPremID = $PrincipalMap[$Policy.ObjectID]
-            
-                # Get Keys - PermissionsToKeys
-                if ($Policy.PermissionsToKeys -Contains "Get") {
-            
-                    #$KVAccessPolicy = New-Object PSObject
-                    #$KVAccessPolicy | Add-Member Noteproperty 'KVID' $KVID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'ControllerID' $Policy.ObjectID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'ObjectOnPremID' $ObjectOnPremID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'Access' "GetKeys"
-
-                    $KVAccessPolicy = [PSCustomObject]@{
-                        KVID            = $KVID
-                        ControllerID    = $Policy.ObjectID
-                        ObjectOnPremID  = $ObjectOnPremID
-                        Access          = "GetKeys"
-                    }
-                
-                    $Coll += $KVAccessPolicy
-                    
-                }
-                # Get Certificates - PermissionsToCertificates
-                if ($Policy.PermissionsToCertificates -Contains "Get") {
-            
-                    #$KVAccessPolicy = New-Object PSObject
-                    #$KVAccessPolicy | Add-Member Noteproperty 'KVID' $KVID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'ControllerID' $Policy.ObjectID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'ObjectOnPremID' $ObjectOnPremID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'Access' "GetCertificates"
-
-                    $KVAccessPolicy = [PSCustomObject]@{
-                        KVID            = $KVID
-                        ControllerID    = $Policy.ObjectID
-                        ObjectOnPremID  = $ObjectOnPremID
-                        Access          = "GetCertificates"
-                    }
-                
-                    $Coll += $KVAccessPolicy
-                    
-                }
-                # Get Secrets - PermissionsToSecrets
-                if ($Policy.PermissionsToSecrets -Contains "Get") {
-            
-                    #$KVAccessPolicy = New-Object PSObject
-                    #$KVAccessPolicy | Add-Member Noteproperty 'KVID' $KVID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'ControllerID' $Policy.ObjectID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'ObjectOnPremID' $ObjectOnPremID
-                    #$KVAccessPolicy | Add-Member Noteproperty 'Access' "GetSecrets"
-
-                    $KVAccessPolicy = [PSCustomObject]@{
-                        KVID            = $KVID
-                        ControllerID    = $Policy.ObjectID
-                        ObjectOnPremID  = $ObjectOnPremID
-                        Access          = "GetSecrets"
-                    }
-                    $Coll += $KVAccessPolicy
-                    
-                }
-            }
-        }
-    }
-    New-Output -Coll $Coll -Type "kvaccesspolicies" -Directory $OutputDirectory
-    #>
+  
     
     # Abusable AZ Admin Roles
     Write-Info "Beginning abusable Azure Admin role logic"
@@ -1471,3 +1363,5 @@ function Invoke-AzureHound {
         Write-Host "Done! Drag and drop the zip into the BloodHound GUI to import data."
     }
 }
+
+#>
