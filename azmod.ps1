@@ -503,7 +503,7 @@ function Invoke-AzureHound {
  		
 	for($a=0; $a -lt 5000; $a++){
 		
-		$Group = $AADGroups[a]
+		$Group = $AADGroups[$a]
 
         $DisplayName = $Group.DisplayName
 
@@ -518,7 +518,7 @@ function Invoke-AzureHound {
             } 
         }
 
-        $GroupID = $AADGroups[a].ObjectID
+        $GroupID = $AADGroups[$a].ObjectID
         $Members = Get-AzureADGroupMember -All $True -ObjectId "$GroupID"
         
         ForEach ($Member in $Members) {
